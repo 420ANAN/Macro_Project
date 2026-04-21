@@ -1,0 +1,309 @@
+/* Login.css - Modern, Mobile-First Design System */
+
+:root {
+  --primary-orange: #E37A22;
+  --primary-orange-hover: #C65D1A;
+  --dark-bg: #111111;
+  --card-bg: rgba(255, 255, 255, 0.05);
+  /* Modern Glassmorphism */
+  --text-main: #ffffff;
+  --text-muted: #a0a0a0;
+  --input-bg: rgba(255, 255, 255, 0.1);
+  --input-border: rgba(255, 255, 255, 0.2);
+  --input-focus: #E37A22;
+  --border-radius: 12px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: radial-gradient(circle at top left, #2a2a2a, #111111 70%);
+  font-family: 'Open Sans', sans-serif;
+  color: var(--text-main);
+  overflow-x: hidden;
+}
+
+.login-container {
+  width: 100%;
+  max-width: 440px;
+  /* Optimal width for readability */
+  animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header & Logo Section */
+.login-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.login-logo-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo-main-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.maco-logo-img {
+  width: 80px;
+  height: auto;
+  filter: drop-shadow(0 0 10px rgba(227, 122, 34, 0.3));
+}
+
+.logo-text-large {
+  /* Using clamp for responsive typography: min, preferred, max */
+  font-size: clamp(3rem, 15vw, 6rem);
+  font-family: "Impact", "Charcoal", "Arial Black", sans-serif;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0px;
+  background: #ffffff;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0;
+}
+
+.logo-sub-text {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: var(--primary-orange);
+  font-weight: 700;
+  margin-top: -0.5rem;
+}
+
+/* Form Styling */
+.login-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--input-border);
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.login-instruction {
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin-bottom: 2rem;
+  font-weight: 400;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.forgot-password {
+  font-size: 0.85rem;
+  color: var(--primary-orange);
+  text-decoration: none;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.forgot-password:hover {
+  text-decoration: underline;
+  color: var(--primary-orange-hover);
+}
+
+.login-footer-links {
+  margin-top: 2rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--input-border);
+}
+
+.link-register {
+  color: var(--primary-orange);
+  text-decoration: none;
+  font-weight: 700;
+  transition: var(--transition);
+}
+
+.link-register:hover {
+  text-decoration: underline;
+  color: var(--primary-orange-hover);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.login-container .form-group label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-main) !important;
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.login-input,
+.login-select {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  background: var(--input-bg) !important;
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  color: #ffffff !important;
+  font-size: 1rem;
+  outline: none;
+  transition: var(--transition);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Stabilize select background after selection */
+.login-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1.2rem;
+  padding-right: 2.5rem;
+}
+
+/* Prevent browser autofill from turning fields white */
+.login-input:-webkit-autofill,
+.login-input:-webkit-autofill:hover,
+.login-input:-webkit-autofill:focus,
+.login-select:-webkit-autofill,
+.login-select:-webkit-autofill:hover,
+.login-select:-webkit-autofill:focus {
+  -webkit-text-fill-color: #ffffff !important;
+  -webkit-box-shadow: 0 0 0px 1000px #2a2a2a inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Fix for Select dropdown background in some browsers */
+.login-select option {
+  background: #2a2a2a;
+  color: #ffffff;
+}
+
+.login-input:focus,
+.login-select:focus {
+  border-color: var(--input-focus);
+  background: rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 0 0 4px rgba(227, 122, 34, 0.15);
+}
+
+/* Labels are now permanently white and visible via the .login-container .form-group label rule above */
+
+/* Checkbox & Remember Me */
+.login-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: -0.5rem;
+}
+
+.remember-me {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.85rem;
+
+}
+
+.remember-me input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary-orange);
+  cursor: pointer;
+}
+
+/* Button Styling */
+.btn-submit {
+  width: 100%;
+  padding: 1rem;
+  background: var(--primary-orange);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-top: 1rem;
+  box-shadow: 0 4px 15px rgba(227, 122, 34, 0.3);
+}
+
+.btn-submit:hover {
+  background: var(--primary-orange-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(227, 122, 34, 0.4);
+}
+
+.btn-submit:active {
+  transform: translateY(0);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 480px) {
+  .login-card {
+    padding: 2rem 1.5rem;
+  }
+
+  .maco-logo-img {
+    width: 60px;
+  }
+}
+
+/* Professional touch - subtle floating animation for logo */
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.maco-logo-img {
+  animation: float 4s ease-in-out infinite;
+}
