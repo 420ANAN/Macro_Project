@@ -15,22 +15,20 @@ export const useProductController = () => {
             const token = JSON.parse(localStorage.getItem('maco_user'))?.token;
 
             const [pRes, cRes] = await Promise.all([
-                fetch(apiUrl('/api/products'), {   // ✅ CHANGED
+                fetch(apiUrl('/api/products'), {
                     headers: { 'Authorization': `Bearer ${token}` }
                 }),
-                fetch(apiUrl('/api/categories'), { // ✅ CHANGED
+                fetch(apiUrl('/api/categories'), {
                     headers: { 'Authorization': `Bearer ${token}` }
                 })
             ]);
 
-            // ✅ NEW: better error visibility
             if (!pRes.ok || !cRes.ok) {
                 throw new Error(
                     `Products status: ${pRes.status}, Categories status: ${cRes.status}`
                 );
             }
 
-            // ✅ NEW: check content type before parsing JSON
             const pType = pRes.headers.get('content-type');
             const cType = cRes.headers.get('content-type');
 
@@ -47,7 +45,12 @@ export const useProductController = () => {
             const pData = await pRes.json();
             const cData = await cRes.json();
 
-            setProducts(pData);
+            const productsWithImages = pData.map(p => ({
+                ...p,
+                imageUrl: p.imageUrl || 'https://via.placeholder.com/300x200?text=No+Image'
+            }));
+
+            setProducts(productsWithImages);
             setCategories(cData);
         } catch (err) {
             console.error('Failed to fetch product data:', err);

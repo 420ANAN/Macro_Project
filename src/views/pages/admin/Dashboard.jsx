@@ -35,6 +35,12 @@ export default function AdminDashboard() {
                             <div style={{ fontSize: '11px', color: '#666' }}>Successful transactions</div>
                         </div>
 
+                        <div className="glass-card" style={{ borderLeft: '4px solid #0dcaf0' }}>
+                            <div className="stat-label">Total Revenue</div>
+                            <div className="stat-value" style={{ color: '#0dcaf0' }}>₹{stats.revenue.toLocaleString()}</div>
+                            <div style={{ fontSize: '11px', color: '#666' }}>From accepted orders</div>
+                        </div>
+
                         <div className="glass-card" style={{ borderLeft: '4px solid #dc3545' }}>
                             <div className="stat-label">Rejected Orders</div>
                             <div className="stat-value" style={{ color: '#dc3545' }}>{stats.rejected}</div>

@@ -5,6 +5,8 @@ import { useAuth } from '../../context/useAuth';
 
 const adminNavItems = [
     { path: '/admin/dashboard', label: 'Dashboard' },
+    { path: '/admin/catalog', label: 'Product Marketplace' },
+
     { path: '/admin/user-approvals', label: 'User Approvals' }, // NEW
     { path: '/admin/manage-company', label: 'Manage Company' },
     { path: '/admin/manage-primary-item', label: 'Manage Primary Item Master' },
@@ -24,6 +26,8 @@ const adminNavItems = [
 
 const customerNavItems = [
     { path: '/customer/dashboard', label: 'Dashboard' },
+    { path: '/customer/catalog', label: 'Product Marketplace' },
+
     { path: '/customer/add-item-cart', label: 'Add Item Cart' },
     { path: '/customer/manage-order', label: 'Manage Order' },
     { path: '/customer/track-supply', label: 'Track Supply Details' },

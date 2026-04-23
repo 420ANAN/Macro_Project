@@ -29,6 +29,8 @@ import CustomerDashboard from './views/pages/customer/Dashboard';
 import AddItemCart from './views/pages/customer/AddItemCart';
 import CustomerManageOrder from './views/pages/customer/ManageOrder';
 import CustomerTrackSupply from './views/pages/customer/TrackSupplyDetails';
+import ProductDetail from './views/pages/shared/ProductDetail';
+
 
 function App() {
   return (
@@ -41,7 +43,7 @@ function App() {
         {/* Admin Routes */}
         <Route element={<ProtectedRoute allowedRole="admin" />}>
           <Route path="/admin" element={<Layout userType="admin" />}>
-            <Route index element={<Navigate to="/admin/dashboard" replace />} />
+            <Route index element={<Navigate to="/admin/catalog" replace />} />
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="manage-company" element={<ManageCompany />} />
             <Route path="manage-primary-item" element={<ManagePrimaryItem />} />
@@ -58,12 +60,15 @@ function App() {
             <Route path="manage-deals" element={<ManageDeals />} />
             <Route path="manage-tasks" element={<ManageTasks />} />
             <Route path="reports" element={<Reporting />} />
+            <Route path="catalog" element={<ProductCatalog />} />
+            <Route path="product/:id" element={<ProductDetail />} />
           </Route>
         </Route>
 
         {/* Customer Routes */}
         <Route element={<ProtectedRoute allowedRole="customer" />}>
           <Route path="/customer" element={<Layout userType="customer" />}>
+            <Route index element={<Navigate to="/customer/catalog" replace />} />
             <Route path="dashboard" element={<CustomerDashboard />} />
             <Route path="catalog" element={<ProductCatalog />} />
             <Route path="add-item-cart" element={<AddItemCart />} />
@@ -72,6 +77,8 @@ function App() {
             <Route path="manage-leads" element={<ManageLeads />} />
             <Route path="manage-deals" element={<ManageDeals />} />
             <Route path="manage-tasks" element={<ManageTasks />} />
+            <Route path="product/:id" element={<ProductDetail />} />
+
           </Route>
         </Route>
 

@@ -9,10 +9,17 @@ export default function Register() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [role, setRole] = useState('customer');
-    const [adminCredential, setAdminCredential] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const navigate = useNavigate();
+
+    React.useEffect(() => {
+        // Hide scrollbar (slider) on the right side
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = 'auto';
+        };
+    }, []);
 
     const handleRegister = async (e) => {
         e.preventDefault();
@@ -32,10 +39,6 @@ export default function Register() {
                 // CHANGED: use backend message (pending approval vs admin created)
                 setSuccess(response.message || 'Registration successful!');
 
-                // NEW: only auto-redirect admins; customers must wait for approval
-                if (role === 'admin') {
-                    setTimeout(() => navigate('/'), 2000);
-                }
                 // Customers stay on page seeing the "pending approval" message
             }
         } catch (err) {
@@ -125,33 +128,6 @@ export default function Register() {
                             />
                         </div>
 
-                        <div className="form-group">
-                            <label htmlFor="role">Register As</label>
-                            <select
-                                id="role"
-                                className="login-input"
-                                value={role}
-                                onChange={(e) => setRole(e.target.value)}
-                            >
-                                <option value="customer">User</option>
-                                <option value="admin">Admin</option>
-                            </select>
-                        </div>
-
-                        {role === 'admin' && (
-                            <div className="form-group">
-                                <label htmlFor="adminCredential">Admin Credential</label>
-                                <input
-                                    id="adminCredential"
-                                    type="password"
-                                    className="login-input"
-                                    placeholder="Enter admin credential"
-                                    required
-                                    value={adminCredential}
-                                    onChange={(e) => setAdminCredential(e.target.value)}
-                                />
-                            </div>
-                        )}
 
                         <button type="submit" className="btn-submit">
                             Register Account

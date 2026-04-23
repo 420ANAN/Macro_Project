@@ -21,6 +21,17 @@ export const OrderModel = {
             return [];
         }
     },
+    getOrderDetails: async (orderNo) => {
+        try {
+            const response = await fetch(apiUrl(`/api/orders/${orderNo}`), {
+                headers: { 'Authorization': getToken() }
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Failed to fetch order details:', error);
+            return { success: false };
+        }
+    },
     approveOrder: async (orderNo) => {
         const response = await fetch(apiUrl(`/api/orders/${orderNo}/approve`), { 
             method: 'POST',
@@ -43,6 +54,17 @@ export const OrderModel = {
                 'Authorization': getToken() 
             },
             body: JSON.stringify(orderData)
+        });
+        return await response.json();
+    },
+    updateOrder: async (orderNo, data) => {
+        const response = await fetch(apiUrl(`/api/orders/${orderNo}`), {
+            method: 'PUT',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': getToken() 
+            },
+            body: JSON.stringify(data)
         });
         return await response.json();
     }

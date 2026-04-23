@@ -125,7 +125,7 @@ a:hover {
 .sidebar-logo .logo-text {
   font-size: 28px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--orange-primary);
   letter-spacing: 2px;
 }
 

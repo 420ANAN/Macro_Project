@@ -133,6 +133,8 @@ function mapOrderRow(r) {
     status: r.status,
     acceptDate: r.acceptDate,
     pdf: r.pdf,
+    paymentStatus: r.paymentStatus || 'Unpaid',
+    trackingNo: r.trackingNo || null
   };
 }
 
@@ -169,7 +171,8 @@ function mapProductRow(r) {
     supplierName: r.supplier_name,
     location: r.location,
     experienceYears: r.experience_years,
-    phone: r.phone
+    phone: r.phone,
+    stock: r.stock || 0
   };
 }
 
@@ -180,14 +183,24 @@ function mapProductRow(r) {
 app.post('/api/auth/login', authLimiter, async (req, res) => {
   try {
     const { email, username, password } = req.body;
-    const identifier = email || username;
+    const identifier = (email || username || '').trim();
+    console.log(`[Login Attempt] Identifier: ${identifier}`);
+    
     const user = await getUserByEmailOrUsername(identifier);
 
-    if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+    if (!user) {
+      console.log(`[Login Failed] User not found for: ${identifier}`);
+      return res.status(401).json({ success: false, message: 'Invalid credentials.' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
+    if (!isMatch) {
+      console.log(`[Login Failed] Password mismatch for: ${identifier}`);
       return res.status(401).json({ success: false, message: 'Invalid credentials.' });
     }
 
     // NEW: approval gate — check account status before issuing token
+    console.log(`[Login Check] User status: ${user.status} for: ${identifier}`);
     if (user.status === 'pending') {
       return res.status(403).json({ success: false, message: 'Your registration is pending admin approval.' });
     }
@@ -196,6 +209,7 @@ app.post('/api/auth/login', authLimiter, async (req, res) => {
     }
 
     const token = jwt.sign({ id: user.id, role: user.role, username: user.username }, JWT_SECRET, { expiresIn: '1d' });
+    console.log(`[Login Success] ${identifier} logged in as ${user.role}`);
     res.json({ success: true, role: user.role, username: user.username, token });
   } catch (err) {
     console.error('Login Error:', err);
@@ -207,19 +221,12 @@ app.post('/api/auth/login', authLimiter, async (req, res) => {
 app.post('/api/auth/register', authLimiter, validateRegistration, async (req, res) => {
   try {
     const { fullname, email, password, role, adminCredential } = req.body;
+    const userEmail = (email || '').trim();
+    const userPassword = (password || '').trim();
 
-    // Determine role and status
-    let userRole = 'customer';
-    let userStatus = 'pending'; // NEW: customers start as pending
-
-    if (role === 'admin') {
-      const ADMIN_SECRET = process.env.ADMIN_REGISTRATION_SECRET;
-      if (!ADMIN_SECRET || adminCredential !== ADMIN_SECRET) {
-        return res.status(403).json({ success: false, message: 'Invalid admin credential. Cannot register as admin.' });
-      }
-      userRole = 'admin';
-      userStatus = 'approved'; // NEW: admins are pre-approved
-    }
+    // Forced role and status for public registration
+    const userRole = 'customer';
+    const userStatus = 'pending';
 
     // Check if user already exists
     const existingUser = await getUserByUsername(email);
@@ -227,17 +234,13 @@ app.post('/api/auth/register', authLimiter, validateRegistration, async (req, re
       return res.status(400).json({ success: false, message: 'User with this email already exists.' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    // CHANGED: now inserts status column
+    const hashedPassword = await bcrypt.hash(userPassword, 10);
     await pool.execute(
       'INSERT INTO users (username, fullname, email, password_hash, role, status) VALUES (?,?,?,?,?,?)',
-      [email, fullname || null, email, hashedPassword, userRole, userStatus]
+      [userEmail, fullname || null, userEmail, hashedPassword, userRole, userStatus]
     );
 
-    // NEW: different response message based on role
-    const message = userRole === 'admin'
-      ? 'Admin account created successfully!'
-      : 'Registration submitted successfully. Please wait for admin approval.';
+    const message = 'Registration submitted successfully. Please wait for admin approval.';
 
     res.json({ success: true, message, user: { fullname, email, role: userRole, status: userStatus } });
   } catch (err) {
@@ -350,7 +353,7 @@ app.get('/api/orders', authenticateToken, async (req, res) => {
     const limit = parseInt(req.query.limit) || 100;
     const skip = (page - 1) * limit;
     const [rows] = await pool.query(
-      'SELECT orderNo, customer, requisition, poDate, destination, amount, status, acceptDate, pdf FROM orders ORDER BY orderNo ASC LIMIT ? OFFSET ?',
+      'SELECT orderNo, customer, requisition, poDate, destination, amount, status, acceptDate, pdf, paymentStatus, trackingNo FROM orders ORDER BY orderNo ASC LIMIT ? OFFSET ?',
       [limit, skip]
     );
     res.json(rows.map(mapOrderRow));
@@ -394,7 +397,7 @@ app.post('/api/orders/:orderNo/approve', authenticateToken, async (req, res) => 
     );
     if (result.affectedRows > 0) {
       const [rows] = await pool.execute(
-        'SELECT orderNo, customer, requisition, poDate, destination, amount, status, acceptDate, pdf FROM orders WHERE orderNo=? LIMIT 1',
+        'SELECT orderNo, customer, requisition, poDate, destination, amount, status, acceptDate, pdf, paymentStatus, trackingNo FROM orders WHERE orderNo=? LIMIT 1',
         [orderNo]
       );
       res.json({ success: true, order: mapOrderRow(rows[0]) });
@@ -417,7 +420,7 @@ app.post('/api/orders/:orderNo/reject', authenticateToken, async (req, res) => {
     );
     if (result.affectedRows > 0) {
       const [rows] = await pool.execute(
-        'SELECT orderNo, customer, requisition, poDate, destination, amount, status, acceptDate, pdf FROM orders WHERE orderNo=? LIMIT 1',
+        'SELECT orderNo, customer, requisition, poDate, destination, amount, status, acceptDate, pdf, paymentStatus, trackingNo FROM orders WHERE orderNo=? LIMIT 1',
         [orderNo]
       );
       res.json({ success: true, order: mapOrderRow(rows[0]) });
@@ -426,6 +429,25 @@ app.post('/api/orders/:orderNo/reject', authenticateToken, async (req, res) => {
     }
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to reject order' });
+  }
+});
+
+// UPDATE ORDER (New for Admin)
+app.put('/api/orders/:orderNo', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'Admin only' });
+    const { orderNo } = req.params;
+    const { status, paymentStatus, trackingNo } = req.body;
+
+    await pool.execute(
+      'UPDATE orders SET status=?, paymentStatus=?, trackingNo=? WHERE orderNo=?',
+      [status || 'Pending', paymentStatus || 'Unpaid', trackingNo || null, orderNo]
+    );
+
+    res.json({ success: true, message: 'Order updated successfully' });
+  } catch (err) {
+    console.error('Update Order Error:', err);
+    res.status(500).json({ success: false, message: 'Failed to update order' });
   }
 });
 
@@ -512,10 +534,10 @@ app.get('/api/products', authenticateToken, async (req, res) => {
 app.post('/api/products', authenticateToken, async (req, res) => {
   try {
     if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'Admin only' });
-    const { itemCode, name, categoryId, description, uom, rate, mrp, imageUrl, supplierName, location, experienceYears, phone } = req.body;
+    const { itemCode, name, categoryId, description, uom, rate, mrp, imageUrl, supplierName, location, experienceYears, phone, stock } = req.body;
     await pool.execute(
-      'INSERT INTO products (itemCode, name, category_id, description, uom, rate, mrp, image_url, supplier_name, location, experience_years, phone) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
-      [itemCode || null, name, categoryId, description || null, uom || 'PCS', rate || 0, mrp || 0, imageUrl || null, supplierName || null, location || null, experienceYears || 0, phone || null]
+      'INSERT INTO products (itemCode, name, category_id, description, uom, rate, mrp, image_url, supplier_name, location, experience_years, phone, stock) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)',
+      [itemCode || null, name, categoryId, description || null, uom || 'PCS', rate || 0, mrp || 0, imageUrl || null, supplierName || null, location || null, experienceYears || 0, phone || null, stock || 0]
     );
     res.json({ success: true });
   } catch (err) {
@@ -780,7 +802,7 @@ app.get('/api/supplies', authenticateToken, async (req, res) => {
     if (toDate) { where.push('sc.challanDate <= ?'); params.push(toDate); }
 
     if (where.length > 0) query += ' WHERE ' + where.join(' AND ');
-    
+
     query += ' ORDER BY sc.challanDate DESC';
     const [rows] = await pool.execute(query, params);
     res.json(rows);
@@ -821,44 +843,45 @@ if (require.main === module) {
   dbReady
     .then(() => {
       // REPORTING
-app.get('/api/reports/sales', authenticateToken, async (req, res) => {
-  try {
-    if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'Admin only' });
-    const [rows] = await pool.execute(`
-      SELECT 
-        DATE_FORMAT(createdAt, '%Y-%m') as month,
-        COUNT(*) as orderCount,
-        SUM(amount) as totalRevenue
-      FROM orders
-      WHERE createdAt >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
-      GROUP BY month
-      ORDER BY month ASC
-    `);
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Failed to fetch sales report' });
-  }
-});
+      app.get('/api/reports/sales', authenticateToken, async (req, res) => {
+        try {
+          if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'Admin only' });
+          const [rows] = await pool.execute(`
+            SELECT 
+              DATE_FORMAT(STR_TO_DATE(poDate, '%d-%m-%Y'), '%Y-%m') as month,
+              COUNT(*) as orderCount,
+              SUM(CAST(amount AS DECIMAL(15,2))) as totalRevenue
+            FROM orders
+            GROUP BY month
+            ORDER BY month ASC
+          `);
+          res.json(rows);
+        } catch (err) {
+          console.error('Sales Report Error:', err);
+          res.status(500).json({ success: false, message: 'Failed to fetch sales report' });
+        }
+      });
 
-app.get('/api/reports/supplies', authenticateToken, async (req, res) => {
-  try {
-    if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'Admin only' });
-    const [rows] = await pool.execute(`
-      SELECT 
-        DATE_FORMAT(supply_date, '%Y-%m') as month,
-        COUNT(*) as challanCount
-      FROM supply_challans
-      WHERE supply_date >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
-      GROUP BY month
-      ORDER BY month ASC
-    `);
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Failed to fetch supply report' });
-  }
-});
+      app.get('/api/reports/supplies', authenticateToken, async (req, res) => {
+        try {
+          if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'Admin only' });
+          const [rows] = await pool.execute(`
+            SELECT 
+              DATE_FORMAT(challanDate, '%Y-%m') as month,
+              COUNT(*) as challanCount
+            FROM supply_challans
+            WHERE challanDate >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+            GROUP BY month
+            ORDER BY month ASC
+          `);
+          res.json(rows);
+        } catch (err) {
+          console.error('Supply Report Error:', err);
+          res.status(500).json({ success: false, message: 'Failed to fetch supply report' });
+        }
+      });
 
-app.listen(port, () => {
+      app.listen(port, () => {
         console.log(`Backend API running at http://localhost:${port}`);
       });
     })

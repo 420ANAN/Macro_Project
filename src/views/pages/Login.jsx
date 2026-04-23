@@ -15,9 +15,15 @@ export default function Login() {
 
     useEffect(() => {
         if (user && user.isAuthenticated) {
-            const redirectPath = user.role === 'admin' ? '/admin/dashboard' : '/customer/dashboard';
+            const redirectPath = user.role === 'admin' ? '/admin/catalog' : '/customer/catalog';
             navigate(redirectPath, { replace: true });
         }
+        
+        // Hide scrollbar (slider) on the right side
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = 'auto';
+        };
     }, [user, navigate]);
 
     return (

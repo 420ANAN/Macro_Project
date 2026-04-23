@@ -11,14 +11,14 @@ export default function ManageItemMaster() {
     // We can fetch sizes if needed, but the form doesn't use it yet in a complex way
     
     const [formData, setFormData] = useState({
-        itemCode: '', name: '', categoryId: '', description: '', uom: 'PCS', rate: '', mrp: ''
+        itemCode: '', name: '', categoryId: '', description: '', uom: 'PCS', rate: '', mrp: '', stock: 0
     });
 
     const onSave = async (e) => {
         e.preventDefault();
         const res = await handleSave(formData);
         if (res.success) {
-            setFormData({ itemCode: '', name: '', categoryId: '', description: '', uom: 'PCS', rate: '', mrp: '' });
+            setFormData({ itemCode: '', name: '', categoryId: '', description: '', uom: 'PCS', rate: '', mrp: '', stock: 0 });
         } else alert(res.message);
     };
 
@@ -28,7 +28,8 @@ export default function ManageItemMaster() {
         { key: 'category', header: 'Category' },
         { key: 'uom', header: 'UOM' },
         { key: 'rate', header: 'Rate' },
-        { key: 'mrp', header: 'MRP' }
+        { key: 'mrp', header: 'MRP' },
+        { key: 'stock', header: 'Stock' }
     ];
 
     return (
@@ -94,6 +95,15 @@ export default function ManageItemMaster() {
                                     className="login-input" 
                                     value={formData.mrp} 
                                     onChange={e => setFormData({...formData, mrp: e.target.value})} 
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Current Stock</label>
+                                <input 
+                                    type="number" 
+                                    className="login-input" 
+                                    value={formData.stock} 
+                                    onChange={e => setFormData({...formData, stock: e.target.value})} 
                                 />
                             </div>
                             <div className="form-group full-width">

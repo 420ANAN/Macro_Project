@@ -35,11 +35,23 @@ export const useOrderController = () => {
         fetchOrders(true);
     };
 
+    const updateOrder = async (orderNo, data) => {
+        const res = await OrderModel.updateOrder(orderNo, data);
+        if (res.success) fetchOrders(true);
+        return res;
+    };
+
+    const fetchOrderDetails = async (orderNo) => {
+        return await OrderModel.getOrderDetails(orderNo);
+    };
+
     return {
         orders,
         loading,
         companies,
         approveOrders,
-        rejectOrders
+        rejectOrders,
+        updateOrder,
+        fetchOrderDetails
     };
 };
