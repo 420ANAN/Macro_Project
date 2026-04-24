@@ -31,8 +31,7 @@ export default function Register() {
                 fullname,
                 email,
                 password,
-                role,
-                adminCredential
+                role
             );
 
             if (response.success) {

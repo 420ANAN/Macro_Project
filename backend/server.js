@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
 const { initDb } = require('./db/init');
 
 const app = express();
@@ -14,6 +15,16 @@ if (!JWT_SECRET) {
   console.error('FATAL ERROR: JWT_SECRET is not defined in .env file');
   process.exit(1);
 }
+
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: process.env.SMTP_PORT || 587,
+  secure: false, // true for 465, false for other ports
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
 
 app.use(helmet());
 app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:5173' }));
@@ -239,6 +250,29 @@ app.post('/api/auth/register', authLimiter, validateRegistration, async (req, re
       'INSERT INTO users (username, fullname, email, password_hash, role, status) VALUES (?,?,?,?,?,?)',
       [userEmail, fullname || null, userEmail, hashedPassword, userRole, userStatus]
     );
+
+    // Send email notification to Admin
+    if (process.env.SMTP_USER && process.env.SMTP_PASS && process.env.ADMIN_EMAIL) {
+      try {
+        await transporter.sendMail({
+          from: `"Maco Project" <${process.env.SMTP_USER}>`,
+          to: process.env.ADMIN_EMAIL,
+          subject: 'New User Registration - Pending Approval',
+          text: `A new user has registered and is pending approval.\n\nName: ${fullname}\nEmail: ${userEmail}\n\nPlease login to the admin panel to approve or reject this request.`,
+          html: `<p>A new user has registered and is pending approval.</p>
+                 <ul>
+                   <li><b>Name:</b> ${fullname}</li>
+                   <li><b>Email:</b> ${userEmail}</li>
+                 </ul>
+                 <p>Please login to the admin panel to approve or reject this request.</p>`
+        });
+        console.log(`[Email] Notification sent to admin for user: ${userEmail}`);
+      } catch (emailErr) {
+        console.error('[Email Error] Failed to send registration email:', emailErr);
+      }
+    } else {
+      console.log('[Email] Notification not sent. SMTP credentials or ADMIN_EMAIL not configured.');
+    }
 
     const message = 'Registration submitted successfully. Please wait for admin approval.';
 

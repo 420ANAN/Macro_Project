@@ -26,7 +26,7 @@ export const AuthModel = {
         throw new Error(data.message || 'Invalid credentials');
     },
 
-    register: async (fullname, email, password, role, adminCredential) => {
+    register: async (fullname, email, password, role) => {
         const response = await fetch(apiUrl('/api/auth/register'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -34,8 +34,7 @@ export const AuthModel = {
                 fullname,
                 email,
                 password,
-                role,
-                adminCredential
+                role
             })
         });
 

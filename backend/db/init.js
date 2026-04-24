@@ -41,6 +41,19 @@ async function ensureColumns(pool) {
     await pool.query("ALTER TABLE products ADD COLUMN experience_years INT DEFAULT 0");
     await pool.query("ALTER TABLE products ADD COLUMN phone VARCHAR(64) NULL");
   }
+
+  const [orderColumns] = await pool.query('SHOW COLUMNS FROM orders');
+  const hasPaymentStatus = orderColumns.some(c => c.Field === 'paymentStatus');
+  const hasTrackingNo = orderColumns.some(c => c.Field === 'trackingNo');
+
+  if (!hasPaymentStatus) {
+    console.log('Adding "paymentStatus" column to orders table...');
+    await pool.query("ALTER TABLE orders ADD COLUMN paymentStatus VARCHAR(50) DEFAULT 'Unpaid'");
+  }
+  if (!hasTrackingNo) {
+    console.log('Adding "trackingNo" column to orders table...');
+    await pool.query("ALTER TABLE orders ADD COLUMN trackingNo VARCHAR(100) NULL");
+  }
 }
 
 async function ensureSchema(pool) {
