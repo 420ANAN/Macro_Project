@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 
 export default function AddItemCart() {
     const { user } = useAuth();
-    const { cart, removeFromCart, clearCart } = useProductController();
+    const { cart, removeFromCart, clearCart, updateCartItemQuantity } = useProductController();
     const [statusMsg, setStatusMsg] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const navigate = useNavigate();
@@ -27,10 +27,13 @@ export default function AddItemCart() {
             destination: 'Direct Submission',
             requisition: 'PO-' + Date.now().toString().slice(-6),
             items: cart.map(item => ({
-                id: item.id,
+                item_id: item.item_id || item.id,
+                id: item.item_id || item.id,
                 name: item.name,
                 size: item.size,
+                size_id: item.size_id || item.item_size_id,
                 qty: item.qty,
+                quantity: item.qty,
                 price: item.price,
                 uom: item.uom
             }))
@@ -104,7 +107,19 @@ export default function AddItemCart() {
                                     <tr key={item.cartId}>
                                         <td>{item.name}</td>
                                         <td><strong>{item.size}</strong></td>
-                                        <td>{item.qty}</td>
+                                        <td>
+                                            <input 
+                                                type="number" 
+                                                min="1" 
+                                                value={item.qty} 
+                                                onChange={(e) => {
+                                                    const val = Math.max(1, parseInt(e.target.value) || 1);
+                                                    updateCartItemQuantity(item.cartId, val);
+                                                }}
+                                                className="qty-input"
+                                                style={{ width: '60px', padding: '4px', textAlign: 'center', borderRadius: '4px', border: '1px solid #ccc' }}
+                                            />
+                                        </td>
                                         <td>{item.uom}</td>
                                         <td>₹{item.price}</td>
                                         <td>₹{item.total}</td>

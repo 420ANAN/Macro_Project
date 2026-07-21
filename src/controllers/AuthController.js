@@ -24,7 +24,16 @@ export const useAuthController = () => {
                         ? '/admin/dashboard'
                         : '/customer/dashboard';
 
-                login(response.role, response.token);
+                login({
+                    role: response.role,
+                    roleMaster: response.roleMaster || response.role_master,
+                    username: response.username,
+                    fullname: response.fullname,
+                    companyName: response.companyName || response.company_name,
+                    displayName: response.displayName || response.display_name || response.companyName || response.company_name || response.fullname || response.username,
+                    companyIdCode: response.companyIdCode || response.company_id_code,
+                    token: response.token
+                });
 
                 setEmail('');
                 setPassword('');
