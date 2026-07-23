@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { apiUrl } from '../config/api'; // ✅ NEW
+import { MasterModel } from '../models/MasterModel';
 
 export const useProductController = () => {
     const [products, setProducts] = useState([]);
@@ -12,38 +12,10 @@ export const useProductController = () => {
 
     const fetchProducts = async () => {
         try {
-            const token = JSON.parse(localStorage.getItem('maco_user'))?.token;
-
-            const [pRes, cRes] = await Promise.all([
-                fetch(apiUrl('/api/products'), {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                }),
-                fetch(apiUrl('/api/categories'), {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                })
+            const [pData, cData] = await Promise.all([
+                MasterModel.Products.get(),
+                MasterModel.Categories.get()
             ]);
-
-            if (!pRes.ok || !cRes.ok) {
-                throw new Error(
-                    `Products status: ${pRes.status}, Categories status: ${cRes.status}`
-                );
-            }
-
-            const pType = pRes.headers.get('content-type');
-            const cType = cRes.headers.get('content-type');
-
-            if (!pType?.includes('application/json')) {
-                const text = await pRes.text();
-                throw new Error(`Products API returned non-JSON response: ${text.slice(0, 100)}`);
-            }
-
-            if (!cType?.includes('application/json')) {
-                const text = await cRes.text();
-                throw new Error(`Categories API returned non-JSON response: ${text.slice(0, 100)}`);
-            }
-
-            const pData = await pRes.json();
-            const cData = await cRes.json();
 
             const productsWithImages = pData.map(p => ({
                 ...p,
@@ -53,7 +25,7 @@ export const useProductController = () => {
             setProducts(productsWithImages);
             setCategories(cData);
         } catch (err) {
-            console.error('Failed to fetch product data:', err);
+            console.error('Failed to load demo product data:', err);
         } finally {
             setLoading(false);
         }
@@ -72,21 +44,41 @@ export const useProductController = () => {
             .filter(sh => sh.qty > 0)
             .map(sh => ({
                 id: product.id,
+                item_id: product.item_id || product.id,
                 name: product.name,
                 category: product.category,
                 size: sh.size,
+                size_id: sh.size_id || product.item_size_id,
+                item_size_id: product.item_size_id,
                 qty: parseInt(sh.qty),
-                price: product.rate,
+                price: Number(product.rate || product.list_price || 0),
                 uom: product.uom,
-                total: parseInt(sh.qty) * product.rate,
+                total: parseInt(sh.qty) * Number(product.rate || product.list_price || 0),
                 cartId: `${product.id}-${sh.size}-${Date.now()}`
             }));
 
         setCart(prev => [...prev, ...newItems]);
     };
 
+    const addMultipleToCart = (itemsToAdd) => {
+        setCart(prev => [...prev, ...itemsToAdd]);
+    };
+
     const removeFromCart = (cartId) => {
         setCart(prev => prev.filter(item => item.cartId !== cartId));
+    };
+
+    const updateCartItemQuantity = (cartId, newQty) => {
+        setCart(prev => prev.map(item => {
+            if (item.cartId === cartId) {
+                return {
+                    ...item,
+                    qty: newQty,
+                    total: newQty * item.price
+                };
+            }
+            return item;
+        }));
     };
 
     const clearCart = () => {
@@ -100,7 +92,9 @@ export const useProductController = () => {
         loading,
         cart,
         addToCart,
+        addMultipleToCart,
         removeFromCart,
+        updateCartItemQuantity,
         clearCart
     };
 };

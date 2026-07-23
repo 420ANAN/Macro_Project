@@ -1,30 +1,48 @@
-# Macro_Project
-This is the project for enterprise.
+# MACO ERP Demo
 
-## Configure API URL
+This is a self-contained React/Vite demo build for client presentation. The frontend uses seeded mock data in browser `localStorage`, so it can be deployed directly on Vercel without an API server or database.
 
-The frontend reads the backend URL from `VITE_API_URL`.
+## Demo Login
 
-- Create a file named `.env` in the project root (same folder as `package.json`)
-- Add:
+Use either account:
 
-`VITE_API_URL=http://localhost:3000`
+```text
+Admin: admin / admin
+Customer: customer / customer
 
-If you don't create `.env`, it defaults to `http://localhost:3000`.
+Also supported:
+Admin: admin@maco.demo / demo123
+Customer: customer@maco.demo / demo123
+```
 
-## React + Vite
+Demo data includes companies, products, orders, supplies, CRM leads/deals/tasks, master data, reporting charts, CSV exports, and PDF generation flows.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Local Launch
 
-Currently, two official plugins are available:
+```powershell
+npm install
+npm run dev
+```
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+To reset the demo data, clear the browser's local storage for the site or run this in the browser console:
 
-## React Compiler
+```js
+localStorage.removeItem('maco_demo_db_v1');
+localStorage.removeItem('maco_user');
+localStorage.removeItem('maco_po_cart');
+location.reload();
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Deploy on Vercel
 
-## Expanding the ESLint configuration
+Use these Vercel project settings:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- Framework Preset: `Vite`
+- Root Directory: project root
+- Install Command: `npm install`
+- Build Command: `npm run build`
+- Output Directory: `dist`
+
+No Vercel environment variables are required for the demo version.
+
+The included `vercel.json` keeps React Router pages working on refresh by routing all app paths back to `index.html`.

@@ -1,0 +1,39 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Backend (Dev)",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/server.js",
+      "restart": true,
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/backend",
+      "env": {
+        "NODE_ENV": "development"
+      }
+    },
+    {
+      "name": "Frontend (Vite)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/vite",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ],
+  "compounds": [
+    {
+      "name": "🚀 Start Full Stack (Backend + Frontend)",
+      "configurations": ["Backend (Dev)", "Frontend (Vite)"],
+      "stopAll": true,
+      "presentation": {
+        "hidden": false,
+        "group": "1_full-stack",
+        "order": 1
+      }
+    }
+  ]
+}
